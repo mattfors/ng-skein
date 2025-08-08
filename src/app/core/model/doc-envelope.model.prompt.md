@@ -1,4 +1,4 @@
-# 📨 DocEnvelope<T> Model
+# 📨 DocEnvelope<TData> Model
 
 This model wraps arbitrary data (`T`) for storage in PouchDB. It standardizes document structure for all persisted objects in the system, ensuring they include the necessary `_id` and optional `_rev` fields for Couch-style replication and conflict resolution.
 
@@ -6,23 +6,23 @@ This model wraps arbitrary data (`T`) for storage in PouchDB. It standardizes do
 
 ## 📦 Purpose
 
-`DocEnvelope<T>` is a generic container used to store typed data in PouchDB. It adds revision control metadata required by the database, while keeping the wrapped domain object isolated inside the `data` field.
+`DocEnvelope<TData>` is a generic container used to store typed data in PouchDB. It adds revision control metadata required by the database, while keeping the wrapped domain object isolated inside the `data` field.
 
 This makes the envelope:
 
 - Compatible with PouchDB and CouchDB’s replication model
 - Easily versioned (`_rev`)
-- Type-safe and model-agnostic (`T`)
+- Type-safe and model-agnostic (`TData`)
 
 ---
 
 ## 🧱 Structure
 
 ```ts
-export interface DocEnvelope<T = any> {
-  _id: string;       // Required: Unique key, often namespaced
-  _rev?: string;     // Optional: Used for update/merge by PouchDB
-  data: T;           // Payload: Any domain object
+export interface DocEnvelope<TData = unknown> {
+  _id: string; // Required: Unique key, often namespaced
+  _rev?: string; // Optional: Used for update/merge by PouchDB
+  data: TData; // Payload: Any domain object
 }
 ```
 
@@ -62,7 +62,7 @@ const envelope: DocEnvelope<Picklist> = {
 
 ## 🧑‍💻 For GPT Use
 
-- Always wrap saved domain models in `DocEnvelope<T>`
-- Do not store raw `T` objects directly in PouchDB
+- Always wrap saved domain models in `DocEnvelope<TData>`
+- Do not store raw `TData` objects directly in PouchDB
 - For new documents, omit `_rev`
 - When updating, ensure `_rev` is preserved to avoid conflicts
