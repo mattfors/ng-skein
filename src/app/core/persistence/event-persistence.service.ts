@@ -3,7 +3,7 @@ import { EventScope } from '../model/event-scope.model';
 import { PersistenceService } from './persistence.service';
 import { v4 as uuidv4 } from 'uuid';
 import { DocEnvelope } from '../model/doc-envelope.model';
-import { Observable, map } from 'rxjs';
+import { Observable, filter, from, map, mergeMap, concat } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class EventPersistenceService {
@@ -53,5 +53,32 @@ export class EventPersistenceService {
             .map(row => row.doc!.data as T)
         )
       );
+  }
+
+  /** Stream events for a scope: emits history first, then live */
+  watch<T>(scope: EventScope): Observable<T> {
+    const prefix = this.buildPrefix(scope);
+
+    const initial$ = this.getAll<T>(scope).pipe(
+      mergeMap(arr => from(arr)) // T[] -> T
+    );
+
+    const live$ = this.persistence.changes<DocEnvelope<T>>().pipe(
+      filter(c => c.id?.startsWith(prefix + ':')),        // match this scope (your '_' placeholders are fine)
+      filter(c => !!c.doc?.data),
+      map(c => (c.doc as DocEnvelope<T>).data as T)
+    );
+
+    return concat(initial$, live$);
+  }
+
+  /** Optional: live global feed with ids for effects/causation */
+  watchAll<T>(): Observable<{ id: string; data: T }> {
+    const p = this.prefix + ':';
+    return this.persistence.changes<DocEnvelope<T>>().pipe(
+      filter(c => c.id?.startsWith(p)),
+      filter(c => !!c.doc?.data),
+      map(c => ({ id: c.id, data: (c.doc as DocEnvelope<T>).data as T }))
+    );
   }
 }

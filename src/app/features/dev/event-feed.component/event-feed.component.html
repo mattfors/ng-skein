@@ -1,0 +1,28 @@
+<div class="event-feed">
+  <div class="controls">
+    <button type="button" (click)="addDemo()">Add Demo Event</button>
+  </div>
+
+  <table>
+    <thead>
+    <tr>
+      <th>#</th>
+      <th>Type</th>
+      <th>Timestamp</th>
+      <th>Actor</th>
+      <th>Source</th>
+      <th>Correlation</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let e of events$ | async; let i = index">
+      <td>{{ i + 1 }}</td>
+      <td><code>{{ e.type }}</code></td>
+      <td>{{ e.meta?.ts ? (e.meta?.ts | date:'short') : '—' }}</td>
+      <td>{{ e.meta?.actorId || '—' }}</td>
+      <td>{{ e.meta?.source || '—' }}</td>
+      <td><code>{{ e.meta?.correlationId || '—' }}</code></td>
+    </tr>
+    </tbody>
+  </table>
+</div>

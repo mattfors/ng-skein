@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import PouchDB from 'pouchdb';
 import { DocEnvelope } from '../model/doc-envelope.model';
-import { from, Observable } from 'rxjs';
+import { from, mergeMap, Observable } from 'rxjs';
+import { EventScope } from '../model/event-scope.model';
 
 @Injectable({ providedIn: 'root' })
 export class PersistenceService {
