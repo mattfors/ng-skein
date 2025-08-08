@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "test:ci": "ng test --watch=false --browsers=ChromeHeadless --code-coverage"
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadless --code-coverage",
+    "build:gh-pages": "ng build --configuration production --base-href=/ng-skein/"
   },
   "engines": {
     "node": "20.19.0"
