@@ -9,11 +9,14 @@ It provides a structured way to scope events and state in the workflow engine us
 ## 🧱 Structure
 
 ```ts
+/**
+ * Hierarchical namespace used to categorize persisted events.
+ */
 export interface EventScope {
-  domain: string;         // Primary domain (e.g., "picking")
-  subdomain?: string;     // Optional subdomain (e.g., "picklist")
-  context?: string;       // Optional unique instance (e.g., "PL1234")
-  subcontext?: string;    // Optional step or nested scope (e.g., "step1")
+  domain: string; // Primary domain (e.g., "picking")
+  subdomain?: string; // Optional subdomain (e.g., "picklist")
+  context?: string; // Optional unique instance (e.g., "PL1234")
+  subcontext?: string; // Optional step or nested scope (e.g., "step1")
 }
 ```
 
@@ -39,13 +42,13 @@ export interface EventScope {
 
 ```ts
 const scope: EventScope = {
-  domain: 'picking',
-  subdomain: 'picklist',
-  context: 'PL1234',
-  subcontext: 'step1'
+  domain: "picking",
+  subdomain: "picklist",
+  context: "PL1234",
+  subcontext: "step1",
 };
 
-const id = buildIdFromScope('events', scope);
+const id = buildIdFromScope("events", scope);
 // → "events:picking:picklist:PL1234:step1"
 ```
 

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, Signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { EventFeedComponent } from './features/dev/event-feed.component/event-feed.component';
 
@@ -6,8 +6,9 @@ import { EventFeedComponent } from './features/dev/event-feed.component/event-fe
   selector: 'app-root',
   imports: [RouterOutlet, EventFeedComponent],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
 export class App {
-  protected readonly title = signal('ng-skein');
+  /** Application title displayed in the header */
+  protected readonly title: Signal<string> = signal('ng-skein');
 }
