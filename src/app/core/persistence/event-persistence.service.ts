@@ -58,18 +58,12 @@ export class EventPersistenceService {
   /** Stream events for a scope: emits history first, then live */
   watch<T>(scope: EventScope): Observable<T> {
     const prefix = this.buildPrefix(scope);
-
-    const initial$ = this.getAll<T>(scope).pipe(
-      mergeMap(arr => from(arr)) // T[] -> T
-    );
-
     const live$ = this.persistence.changes<DocEnvelope<T>>().pipe(
-      filter(c => c.id?.startsWith(prefix + ':')),        // match this scope (your '_' placeholders are fine)
+      filter(c => c.id?.startsWith(prefix + ':')),
       filter(c => !!c.doc?.data),
       map(c => (c.doc as DocEnvelope<T>).data as T)
     );
-
-    return concat(initial$, live$);
+    return live$;
   }
 
   /** Optional: live global feed with ids for effects/causation */
@@ -80,5 +74,23 @@ export class EventPersistenceService {
       filter(c => !!c.doc?.data),
       map(c => ({ id: c.id, data: (c.doc as DocEnvelope<T>).data as T }))
     );
+  }
+
+  /**
+   * Watch events for a specific scope.
+   * Streams the historical events first, followed by live updates.
+   */
+  watchByScope<T>(scope: EventScope): Observable<T> {
+    const prefix = this.buildPrefix(scope);
+
+    // Live event listener for changes under this specific scope
+    const live$ = this.persistence.changes<DocEnvelope<T>>().pipe(
+      filter((change) => change.id?.startsWith(prefix + ':')), // Filters by the scope prefix
+      filter((change) => !!change.doc?.data),
+      map((change) => (change.doc as DocEnvelope<T>).data as T)  // Return event data
+    );
+
+    // Return the observable that emits changes from the event stream for this scope
+    return live$;
   }
 }
