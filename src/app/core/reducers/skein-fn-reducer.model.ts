@@ -1,7 +1,7 @@
 import { SkeinReducer } from './skein-reducer.model';
-import { SkeinEvent } from './skein-event.model';
+import { SkeinEvent } from '../model/skein-event.model';
 
-export class SkeinFunctionReducer<TState> implements SkeinReducer<TState> {
+export class SkeinFnReducer<TState> implements SkeinReducer<TState> {
   propertyName: keyof TState;
   operation: (currentValue: any, event: SkeinEvent) => any;
 

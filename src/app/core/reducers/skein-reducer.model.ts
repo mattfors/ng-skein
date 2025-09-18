@@ -1,4 +1,4 @@
-import { SkeinEvent } from './skein-event.model';
+import { SkeinEvent } from '../model/skein-event.model';
 
 export interface SkeinReducer<TState> {
 

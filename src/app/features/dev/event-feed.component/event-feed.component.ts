@@ -6,7 +6,8 @@ import { EventPersistenceService } from '../../../core/persistence/event-persist
 import { EventDispatchService } from '../../../core/events/event-dispatch.service';
 import { AsyncPipe, DatePipe, JsonPipe, NgForOf } from '@angular/common';
 import { ReducerService } from '../../../core/reducers/reducer.service';
-import { SkeinFunctionReducer } from '../../../core/model/skein-fn-reducer.model';
+import { SkeinFnReducer } from '../../../core/reducers/skein-fn-reducer.model';
+import { ElapsedTimeReducer } from '../../../core/reducers/elapsed-time.reducer';
 
 @Component({
   selector: 'app-event-feed',
@@ -40,12 +41,19 @@ export class EventFeedComponent implements OnInit {
       scan((acc, e) => [...acc, e], [] as SkeinEvent[])
     );
 
-    const pingCounterReducer = new SkeinFunctionReducer<{ pingCount: number }>(
+    const pingCounterReducer = new SkeinFnReducer<{ pingCount: number }>(
       'pingCount',  // Property to modify
       (currentValue = 0, event) => currentValue + 1  // Add operation
     );
 
+    const elapsedTimeReducer = new ElapsedTimeReducer<{ at: string; pingTime: { min: Date; max: Date; elapsedTime: number } }>(
+      'at',  // The field in the event payload that contains the date (e.g., 'at', 'timestamp')
+      'pingTime'  // The property in the state to store the elapsed time
+    );
+
+
     this.reducerService.registerReducer('DEMO_PING', pingCounterReducer,  this.scope);
+    this.reducerService.registerReducer('DEMO_PING', elapsedTimeReducer,  this.scope);
 
 
   }
