@@ -1,13 +1,11 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { EventScope } from '../../../core/model/event-scope.model';
 import { SkeinEvent } from '../../../core/model/skein-event.model';
-import { Observable, scan } from 'rxjs';
-import { EventPersistenceService } from '../../../core/persistence/event-persistence.service';
-import { EventDispatchService } from '../../../core/events/event-dispatch.service';
+import { Observable } from 'rxjs';
 import { AsyncPipe, DatePipe, JsonPipe, NgForOf } from '@angular/common';
-import { ReducerService } from '../../../core/reducers/reducer.service';
-import { SkeinFnReducer } from '../../../core/reducers/skein-fn-reducer.model';
-import { ElapsedTimeReducer } from '../../../core/reducers/elapsed-time.reducer';
+import { Store } from '@ngrx/store';
+import * as EventFeedActions from '../store/event-feed.actions';
+import * as EventFeedSelectors from '../store/event-feed.selectors';
 
 @Component({
   selector: 'app-event-feed',
@@ -21,49 +19,39 @@ import { ElapsedTimeReducer } from '../../../core/reducers/elapsed-time.reducer'
   templateUrl: './event-feed.component.html',
   styleUrl: './event-feed.component.scss'
 })
-export class EventFeedComponent implements OnInit {
+export class EventFeedComponent implements OnInit, OnDestroy {
   @Input({ required: true }) scope!: EventScope;
 
-  // Running list built from history + live stream
+  // Observable streams from NgRx store
   events$!: Observable<SkeinEvent[]>;
-  state$: Observable<any>;
+  state$!: Observable<any>;
+  loading$!: Observable<boolean>;
+  error$!: Observable<any>;
 
-  constructor(
-    private events: EventPersistenceService,
-    private dispatch: EventDispatchService,
-    private reducerService: ReducerService
-  ) {
-    this.state$ = this.reducerService.state$;
-  }
+  private store = inject(Store);
 
   ngOnInit(): void {
-    this.events$ = this.events.watch<SkeinEvent>(this.scope).pipe(
-      scan((acc, e) => [...acc, e], [] as SkeinEvent[])
-    );
+    // Set up observables from NgRx store
+    this.events$ = this.store.select(EventFeedSelectors.selectEvents);
+    this.state$ = this.store.select(EventFeedSelectors.selectState);
+    this.loading$ = this.store.select(EventFeedSelectors.selectLoading);
+    this.error$ = this.store.select(EventFeedSelectors.selectError);
 
-    const pingCounterReducer = new SkeinFnReducer<{ pingCount: number }>(
-      'pingCount',  // Property to modify
-      (currentValue = 0, event) => currentValue + 1  // Add operation
-    );
+    // Dispatch actions to set scope and start watching events
+    this.store.dispatch(EventFeedActions.setScope({ scope: this.scope }));
+    this.store.dispatch(EventFeedActions.loadEvents({ scope: this.scope }));
+  }
 
-    const elapsedTimeReducer = new ElapsedTimeReducer<{ at: string; pingTime: { min: Date; max: Date; elapsedTime: number } }>(
-      'at',  // The field in the event payload that contains the date (e.g., 'at', 'timestamp')
-      'pingTime'  // The property in the state to store the elapsed time
-    );
-
-
-    this.reducerService.registerReducer('DEMO_PING', pingCounterReducer,  this.scope);
-    this.reducerService.registerReducer('DEMO_PING', elapsedTimeReducer,  this.scope);
-
-
+  ngOnDestroy(): void {
+    // NgRx effects handle cleanup automatically
   }
 
   addDemo(): void {
-    this.dispatch.dispatch(
-      this.scope,
-      'DEMO_PING',
-      { at: new Date().toISOString() },
-      { source: 'ui' }
-    ).subscribe();
+    this.store.dispatch(EventFeedActions.addEvent({
+      scope: this.scope,
+      eventType: 'DEMO_PING',
+      payload: { at: new Date().toISOString() },
+      options: { source: 'ui' }
+    }));
   }
 }
